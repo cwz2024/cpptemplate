@@ -1,0 +1,3 @@
+这是 [![Codeforces Rating of @cwz2024](https://cfrating.baoshuo.dev/rating?username=cwz2024&style=flat-square)](https://codeforces.com/profile/cwz2024) 的 cf 板子，仅为响应 cf 最新第三方代码规则而创建
+
+This is cf template of [![Codeforces Rating of @cwz2024](https://cfrating.baoshuo.dev/rating?username=cwz2024&style=flat-square)](https://codeforces.com/profile/cwz2024), created for newly updated rule about third-party code of codeforces.
