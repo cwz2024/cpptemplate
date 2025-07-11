@@ -47,3 +47,24 @@ vector<int> min_p_n(int n) // max value
     }
     return p;
 }
+vector<long long> big_primearr(long long l, long long r)
+{
+    int n = int(sqrt(r)) + 3;
+    vector<bool> p(n + 1), bigp(r - l + 1);
+    for (int i = 2; i <= n; i++)
+    {
+        if (p[i])
+            continue;
+        for (int j = 2 * i; j <= n; j += i)
+            p[j] = 1;
+        for (long long j = (l + i - 1) / i * i; j <= r; j += i)
+            bigp[j - l] = 1;
+    }
+    vector<long long> arr;
+    for (long long j = l; j <= r; j++)
+    {
+        if (!bigp[j - l])
+            arr.push_back(j);
+    }
+    return arr;
+}
