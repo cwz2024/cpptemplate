@@ -52,3 +52,37 @@ vector<vector<int>> tarjan(auto &graph, bool hasdirection = false)
     }
     return ans;
 }
+vector<pair<int, int>> bridge(vector<vector<int>> &G)
+{
+    vector<int> low(G.size()), dfn(G.size());
+    int idx = 0;
+    vector<pair<int, int>> ans;
+    vector<int> father(G.size());
+    auto tarjan = [&](auto self, int u, int fa) -> void
+    {
+        bool flag = false;
+        father[u] = fa;
+        low[u] = dfn[u] = ++idx;
+        for (const auto &v : G[u])
+        {
+            if (!dfn[v])
+            {
+                self(self, v, u);
+                low[u] = min(low[u], low[v]);
+                if (low[v] > dfn[u])
+                {
+                    ans.push_back(minmax(u, v));
+                }
+            }
+            else
+            {
+                if (v != fa || flag)
+                    low[u] = min(low[u], dfn[v]);
+                else
+                    flag = true;
+            }
+        }
+    };
+    tarjan(tarjan, 0, 0);
+    return ans;
+}
