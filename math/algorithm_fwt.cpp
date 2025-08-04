@@ -107,3 +107,43 @@ using vm = vector<mint>;
 using vvm = vector<vm>;
 
 /* Cnm = n! / (m!*(n - m)!) */
+void fwt_or(vector<mint> &f, mint g) // g=1, ig=-1
+{
+    int n = int(f.size());
+    for (int o = 2, k = 1; o <= n; o <<= 1, k <<= 1)
+        for (int i = 0; i < n; i += o)
+            for (int j = 0; j < k; j++)
+                f[i + j + k] += f[i + j] * g;
+}
+void fwt_and(vector<mint> &f, mint g) // g=1, ig=-1
+{
+    int n = int(f.size());
+    for (int o = 2, k = 1; o <= n; o <<= 1, k <<= 1)
+        for (int i = 0; i < n; i += o)
+            for (int j = 0; j < k; j++)
+                f[i + j] += f[i + j + k] * g;
+}
+void fwt_xor(vector<mint> &f, mint g) // g=1, ig=0.5
+{
+    int n = int(f.size());
+    for (int o = 2, k = 1; o <= n; o <<= 1, k <<= 1)
+        for (int i = 0; i < n; i += o)
+            for (int j = 0; j < k; j++)
+            {
+                f[i + j] += f[i + j + k];
+                f[i + j + k] = f[i + j] - f[i + j + k] - f[i + j + k];
+                f[i + j] *= g, f[i + j + k] *= g;
+            }
+}
+vector<mint> fwtconvolution(vector<mint> a, vector<mint> b, void (*op)(vector<mint> &, mint), mint g, mint ig)
+{
+    assert(a.size() == b.size());
+    int n = int(a.size());
+    assert((n & -n) == n);
+    vector<mint> c(n);
+    op(a, g), op(b, g);
+    for (int i = 0; i < n; i++)
+        c[i] = a[i] * b[i];
+    op(c, ig);
+    return c;
+}

@@ -83,7 +83,16 @@ public:
     friend bool operator==(const mint &a, const mint &b) { return a._v == b._v; }
     friend bool operator!=(const mint &a, const mint &b) { return a._v != b._v; }
     friend ostream &operator<<(ostream &i, mint a) { return i << a.val(); }
-    friend istream &operator>>(istream &i, mint &a) { return i >> a._v; }
+    friend istream &operator>>(istream &i, mint &a)
+    {
+        long long v;
+        istream &ans = i >> v;
+        long long x = (long long)(v % (long long)(mod));
+        if (x < 0)
+            x += mod;
+        a._v = (unsigned int)(x);
+        return ans;
+    }
     unsigned int val() const { return _v; }
     mint() : _v(0) {}
     template <class T>

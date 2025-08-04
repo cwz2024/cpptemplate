@@ -32,10 +32,10 @@ void fft(vector<complex<double>> &p, int g = 1)
 }
 
 const int mod = 998244353;
-struct mint
+struct mint // from ac-library
 {
 private:
-    int _v;
+    unsigned int _v;
 
 public:
     mint &operator++()
@@ -54,67 +54,85 @@ public:
     }
     mint operator++(int)
     {
-        mint a = *this;
+        mint result = *this;
         ++*this;
-        return a;
+        return result;
     }
     mint operator--(int)
     {
-        mint a = *this;
+        mint result = *this;
         --*this;
-        return a;
+        return result;
     }
-    mint operator+() { return *this; }
-    mint operator+(mint a) { return mint(_v + a._v); }
-    mint operator+=(mint a)
+
+    mint &operator+=(const mint &rhs)
     {
-        _v = (_v + a._v) % mod;
+        _v += rhs._v;
+        if (_v >= mod)
+            _v -= mod;
         return *this;
     }
-    mint operator-() { return mint() - *this; }
-    mint operator-(mint a) { return mint(_v - a._v); }
-    mint operator-=(mint a)
+    mint &operator-=(const mint &rhs)
     {
-        _v = (_v - a._v + mod) % mod;
+        _v -= rhs._v;
+        if (_v >= mod)
+            _v += mod;
         return *this;
     }
-    mint operator*(mint a) { return mint(1ll * _v * a._v % mod); }
-    mint operator*=(mint a)
+    mint &operator*=(const mint &rhs)
     {
-        _v = int((1ll * _v * a._v) % mod);
+        unsigned long long z = _v;
+        z *= rhs._v;
+        _v = (unsigned int)(z % mod);
         return *this;
     }
-    mint operator^(long long n)
+    mint &operator/=(const mint &rhs) { return *this = *this * rhs.inv(); }
+
+    mint operator+() const { return *this; }
+    mint operator-() const { return mint() - *this; }
+
+    mint pow(long long n) const
     {
-        mint ans = 1, base = _v;
+        assert(0 <= n);
+        mint x = *this, r = 1;
         while (n)
         {
             if (n & 1)
-                ans *= base;
-            base *= base;
+                r *= x;
+            x *= x;
             n >>= 1;
         }
+        return r;
+    }
+    mint inv() const { return pow(mod - 2); }
+
+    friend mint operator+(const mint &a, const mint &b) { return mint(a) += b; }
+    friend mint operator-(const mint &a, const mint &b) { return mint(a) -= b; }
+    friend mint operator*(const mint &a, const mint &b) { return mint(a) *= b; }
+    friend mint operator/(const mint &a, const mint &b) { return mint(a) /= b; }
+    friend bool operator==(const mint &a, const mint &b) { return a._v == b._v; }
+    friend bool operator!=(const mint &a, const mint &b) { return a._v != b._v; }
+    friend ostream &operator<<(ostream &i, mint a) { return i << a.val(); }
+    friend istream &operator>>(istream &i, mint &a)
+    {
+        long long v;
+        istream &ans = i >> v;
+        long long x = (long long)(v % (long long)(mod));
+        if (x < 0)
+            x += mod;
+        a._v = (unsigned int)(x);
         return ans;
     }
-    mint operator^=(long long n)
+    unsigned int val() const { return _v; }
+    mint() : _v(0) {}
+    template <class T>
+    mint(T v)
     {
-        _v = operator^(n)._v;
-        return *this;
+        long long x = (long long)(v % (long long)(mod));
+        if (x < 0)
+            x += mod;
+        _v = (unsigned int)(x);
     }
-    mint operator/(mint a) { return operator*(a ^ (mod - 2)); }
-    mint operator/=(mint a)
-    {
-        _v = operator*(a ^ (mod - 2))._v;
-        return *this;
-    }
-    bool operator==(mint a) { return _v == a._v; }
-    bool operator!=(mint a) { return _v != a._v; }
-    friend ostream &operator<<(ostream &i, mint a) { return i << a.val(); }
-    friend istream &operator>>(istream &i, mint &a) { return i >> a._v; }
-    int val() { return _v; }
-    mint() { _v = 0; }
-    mint(int a) { _v = (a % mod + mod) % mod; }
-    mint(long long a) { _v = int((a % mod + mod) % mod); }
 };
 const mint G = 3, Gi = mint(1) / G;
 
@@ -132,7 +150,7 @@ void ntt(vector<mint> &p, mint g)
     }
     for (int wid = 2; wid <= n; wid <<= 1)
     {
-        mint w = g ^ ((mod - 1) / wid);
+        mint w = g.pow((mod - 1) / wid);
         for (int l = 0; l < n; l += wid)
         {
             mint wi = 1;
@@ -146,44 +164,137 @@ void ntt(vector<mint> &p, mint g)
     }
 }
 
-vector<int> convolution(vector<int> &a, vector<int> &b) // ntt
+vector<mint> convolution(vector<mint> a, vector<mint> b) // ntt
 {
     int n = int(size(a) + size(b)), lg = 0;
     while (1 << lg < n)
-    {
         lg++;
-    }
     n = 1 << lg;
-    vector<mint> pa(n), pb(n), p(n);
-    for (int i = 0; i < (int)size(a); i++)
-    {
-        pa[i] = a[i];
-    }
-    for (int i = 0; i < (int)size(b); i++)
-    {
-        pb[i] = b[i];
-    }
-    ntt(pa, G), ntt(pb, G);
+    a.resize(n);
+    b.resize(n);
+    vector<mint> p(n);
+    ntt(a, G), ntt(b, G);
     for (int i = 0; i < n; i++)
     {
-        p[i] = pa[i] * pb[i];
+        p[i] = a[i] * b[i];
     }
     ntt(p, Gi);
     mint inv = mint(1) / n;
     for (int i = 0; i < n; i++)
         p[i] *= inv;
-    vector<int> y(n);
-    for (int i = 0; i < n; i++)
-    {
-        y[i] = p[i].val();
-    }
-    while (y.back() == 0)
-    {
-        y.pop_back();
-    }
-    return y;
+    return p;
 }
-
+vector<mint> poly_inv(vector<mint> a)
+{
+    int n = int(a.size()), lg = 0;
+    while (1 << lg < n)
+        lg++;
+    a.resize(1 << lg);
+    vector<mint> ans = {a[0].inv()};
+    while (ans.size() < a.size())
+    {
+        ans.resize(2 * ans.size());
+        vector<mint> b = ans;
+        b.resize(ans.size() * 2);
+        vector<mint> f(ans.size() * 2);
+        copy(a.begin(), a.begin() + ans.size(), f.begin());
+        ntt(b, G), ntt(f, G);
+        for (int i = 0; i < int(b.size()); i++)
+            b[i] *= b[i] * f[i];
+        ntt(b, Gi);
+        mint inv = mint(b.size()).inv();
+        for (int i = 0; i < int(ans.size()); i++)
+            ans[i] = 2 * ans[i] - b[i] * inv;
+    }
+    ans.resize(n);
+    return ans;
+}
+pair<vector<mint>, vector<mint>> poly_div(vector<mint> lhs, vector<mint> rhs) // {div, mod}
+{
+    int n = int(lhs.size()), m = int(rhs.size());
+    vector<mint> fr(lhs.rbegin(), lhs.rend()), gr(rhs.rbegin(), rhs.rend());
+    fr.resize(n - m + 2);
+    gr.resize(n - m + 2);
+    vector<mint> qr = convolution(fr, poly_inv(gr));
+    qr.resize(n - m + 1);
+    reverse(qr.begin(), qr.end());
+    vector<mint> b = convolution(qr, rhs);
+    vector<mint> rem(m - 1);
+    for (int i = 0; i < m - 1; i++)
+        rem[i] = lhs[i] - b[i];
+    return {qr, rem};
+}
+vector<mint> poly_ln(vector<mint> a)
+{
+    vector<mint> da(a.size());
+    for (int i = 0; i < (int)a.size() - 1; i++)
+        da[i] = (i + 1) * a[i + 1];
+    vector<mint> dlna = convolution(da, poly_inv(a));
+    dlna.resize(a.size());
+    for (int i = (int)a.size() - 1; i > 0; i--)
+        dlna[i] = dlna[i - 1] / i;
+    dlna[0] = 0;
+    return dlna;
+}
+vector<mint> poly_exp(vector<mint> a)
+{
+    vector<mint> ans = {1, 0};
+    while (ans.size() / 2 < a.size())
+    {
+        vector<mint> b = poly_ln(ans);
+        for (int i = 0; i < (int)ans.size(); i++)
+            if (i < (int)a.size())
+                b[i] = a[i] - b[i];
+            else
+                b[i] = -b[i];
+        b[0]++;
+        ans = convolution(b, ans);
+    }
+    ans.resize(a.size());
+    return ans;
+}
+vector<mint> poly_multiget(vector<mint> poly, vector<mint> x)
+{
+    int m = int(x.size()), mx = (int)max(poly.size(), x.size()), lg = 0;
+    while (1 << lg < mx)
+        lg++;
+    x.resize(mx);
+    vector<vector<mint>> g(1 << (lg + 1));
+    auto init = [&](auto self, int l, int r, int node) -> void
+    {
+        if (r - l == 1)
+        {
+            g[node] = {-x[l], 1};
+            return;
+        }
+        int mid = (l + r) >> 1;
+        self(self, l, mid, node << 1);
+        self(self, mid, r, node << 1 | 1);
+        g[node] = convolution(g[node << 1], g[node << 1 | 1]);
+        while (g[node].back() == 0)
+            g[node].pop_back();
+    };
+    init(init, 0, mx, 1);
+    vector<mint> ans(m);
+    auto solve = [&](auto self, vector<mint> poly, int l, int r, int node) -> void
+    {
+        if (r - l == 1)
+        {
+            ans[l] = poly[0];
+            return;
+        }
+        int mid = (l + r) >> 1;
+        vector<mint> f0 = poly_div(poly, g[node << 1]).second;
+        self(self, f0, l, mid, node << 1);
+        if (mid < m)
+        {
+            f0 = poly_div(poly, g[node << 1 | 1]).second;
+            self(self, f0, mid, r, node << 1 | 1);
+        }
+    };
+    solve(solve, poly, 0, mx, 1);
+    return ans;
+}
 vector<int> dumbconvolution(vector<int> &a, vector<int> &b) // fft
 {
     int n = int(size(a) + size(b)), lg = 0;
